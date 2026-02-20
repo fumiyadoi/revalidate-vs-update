@@ -1,39 +1,39 @@
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import {
   revalidateDataTagAction,
   revalidateTestPath,
   updateDataTagAction,
 } from "./actions";
+import { connection } from "next/server";
 
 // Cached function with tag
-const getDataWithTag = unstable_cache(
-  async () => {
-    return {
-      message: "Cached data with tag",
-      timestamp: new Date().toISOString(),
-      random: Math.random(),
-    };
-  },
-  ["data-with-tag"],
-  { tags: ["data-tag"], revalidate: 3600 },
-);
+const getDataWithTag = async () => {
+  "use cache: remote";
+  cacheTag("data-tag");
+  cacheLife("days");
+  return {
+    message: "Cached data with tag",
+    timestamp: new Date().toISOString(),
+    random: Math.random(),
+  };
+};
 
 // Cached function without tag
-const getDataWithoutTag = unstable_cache(
-  async () => {
-    return {
-      message: "Cached data without tag",
-      timestamp: new Date().toISOString(),
-      random: Math.random(),
-    };
-  },
-  ["data-without-tag"],
-  { revalidate: 3600 },
-);
+const getDataWithoutTag = async () => {
+  "use cache: remote";
+  cacheTag("data-without-tag");
+  cacheLife("days");
+  return {
+    message: "Cached data without tag",
+    timestamp: new Date().toISOString(),
+    random: Math.random(),
+  };
+};
 
 export default async function TestPage() {
   const dataWithTag = await getDataWithTag();
   const dataWithoutTag = await getDataWithoutTag();
+  await connection();
   const serverTimestamp = new Date().toISOString();
 
   return (
